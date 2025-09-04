@@ -1,0 +1,236 @@
+SELECT 
+  EmployeeID,
+  Name,
+  total_bonus
+FROM (
+  SELECT 
+    e.EmployeeID,
+    e.Name,
+    COALESCE(SUM(b.BonusAmount), 0) AS total_bonus
+  FROM employees AS e
+  LEFT JOIN bonuses AS b
+    ON e.EmployeeID = b.EmployeeID
+  GROUP BY e.EmployeeID, e.Name
+) AS employee_bonus_totals
+WHERE total_bonus = (
+  SELECT MAX(max_bonus)
+  FROM (
+    SELECT 
+      e.EmployeeID,
+      COALESCE(SUM(b.BonusAmount), 0) AS max_bonus
+    FROM employees AS e
+    LEFT JOIN bonuses AS b
+      ON e.EmployeeID = b.EmployeeID
+    GROUP BY e.EmployeeID
+  ) AS max_bonus_table
+);
+
+
+---------
+WITH BonusTotals AS (
+  SELECT 
+    e.EmployeeID,
+    e.Name,
+    COALESCE(SUM(b.BonusAmount), 0) AS total_bonus
+  FROM employees AS e
+  LEFT JOIN bonuses AS b
+    ON e.EmployeeID = b.EmployeeID
+  GROUP BY e.EmployeeID, e.Name
+),
+RankedBonuses AS (
+  SELECT 
+    *,
+    RANK() OVER (ORDER BY total_bonus DESC) AS bonus_rank
+  FROM BonusTotals
+)
+SELECT 
+  EmployeeID,
+  Name,
+  total_bonus
+FROM RankedBonuses
+WHERE bonus_rank <= 3;
+
+--------------------
+Great — let’s do this one step at a time.
+
+---
+
+## 🔍 Problem:
+
+> **Write a SQL query** to return all **employees whose total bonus is above the average total bonus**.
+> Include employees even if they have **no bonuses** (treat their bonus as 0).
+
+Your output should be:
+
+* `EmployeeID`
+* `Name`
+* `total_bonus`
+
+---
+WITH BonusTotals AS (
+  SELECT 
+    e.EmployeeID,
+    e.Name,
+    COALESCE(SUM(b.BonusAmount), 0) AS total_bonus
+  FROM employees AS e
+  LEFT JOIN bonuses AS b
+    ON e.EmployeeID = b.EmployeeID
+  GROUP BY e.EmployeeID, e.Name
+),
+AvgBonus AS (
+  SELECT AVG(total_bonus) AS avg_bonus FROM BonusTotals
+)
+
+SELECT 
+  bt.EmployeeID,
+  bt.Name,
+  bt.total_bonus
+FROM BonusTotals AS bt
+JOIN AvgBonus AS ab
+  ON bt.total_bonus > ab.avg_bonus;
+
+-----------------------
+
+🎯 Goal:
+
+Write a SQL query to return employees whose total bonus is in the top 50% of all employees.
+
+Include employees who received no bonus (i.e. treat their total bonus as 0).
+
+🎯 Expected Output:
+
+EmployeeID
+
+Name
+
+total_bonus
+--
+
+WITH BonusTotals AS (
+  SELECT 
+    e.EmployeeID,
+    e.Name,
+    COALESCE(SUM(b.BonusAmount), 0) AS total_bonus
+  FROM employees AS e
+  LEFT JOIN bonuses AS b
+    ON e.EmployeeID = b.EmployeeID
+  GROUP BY e.EmployeeID, e.Name
+),
+RankedBonuses AS (
+  SELECT 
+    *,
+    PERCENT_RANK() OVER (ORDER BY total_bonus DESC) AS bonus_percent 
+	
+   -- Concept	Explanation-- PERCENT_RANK()	Gives a value from 0 to 1 — where 1 is the lowest (last row), 0 is the highest (first row)
+   
+     FROM BonusTotals
+)
+
+SELECT 
+  EmployeeID,
+  Name,
+  total_bonus
+FROM RankedBonuses
+WHERE bonus_percent <= 0.5;
+
+---------------------
+
+.
+
+🧠 New Challenge:
+
+🎯 Find the department(s) with the highest average salary, based on an employees and departments table.
+
+✅ Assumptions:
+
+Table employees has: EmployeeID, Name, Salary, DepartmentID
+
+Table departments has: DepartmentID, DepartmentName
+
+--
+
+WITH DeptAvgSalary AS (
+  SELECT 
+    d.DepartmentID,
+    d.DepartmentName,
+    AVG(e.Salary) AS avg_salary
+  FROM departments AS d
+  JOIN employees AS e
+    ON d.DepartmentID = e.DepartmentID
+  GROUP BY d.DepartmentID, d.DepartmentName
+),
+
+MaxAvgSalary AS (
+  SELECT MAX(avg_salary) AS max_avg_salary
+  FROM DeptAvgSalary
+)
+
+SELECT 
+  DepartmentID,
+  DepartmentName,
+  avg_salary
+FROM DeptAvgSalary
+WHERE avg_salary = (SELECT max_avg_salary FROM MaxAvgSalary);
+
+---------------------------------------------------------
+
+Here are some common types of questions that use correlated subqueries:
+
+Find rows that have a max/min value per group
+Example: Find employees with the highest salary in each department.
+
+SELECT * FROM employees e
+WHERE salary = (
+  SELECT MAX(salary) 
+  FROM employees 
+  WHERE department_id = e.department_id
+);
+
+
+Find rows that are greater/less than average per group
+Example: Find students whose scores are above the average score in their class.
+
+SELECT * FROM students s1
+WHERE scores > (
+  SELECT AVG(scores)
+  FROM students s2
+  WHERE s2.class_id = s1.class_id
+);
+
+
+Find rows that don’t have related rows in another table
+Example: Find customers who have never placed an order.
+SELECT * FROM customers c
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders o WHERE o.customer_id = c.customer_id
+);
+
+
+Check existence or non-existence of related rows
+Example: Find products that have at least one sale this month.
+select * from products p where prodID Exists (select * from sales s where s.prodID=p.prodID);
+
+SELECT * FROM products p
+WHERE EXISTS (
+  SELECT 1 FROM sales s 
+  WHERE s.prodID = p.prodID
+  AND s.sale_date >= '2025-01-01' -- example for this month filter
+);
+
+
+Find rows where a condition depends on another row’s data
+Example: Find employees who earn more than their manager.
+select * from employees e1 where salary>(select salary from employees where e.empId=e1.empId);
+
+SELECT * FROM employees e1
+WHERE salary > (
+  SELECT salary 
+  FROM employees e2 
+  WHERE e2.employee_id = e1.manager_id
+);
+
+
+
+
+
+

@@ -1,0 +1,166 @@
+You have this date: '2023-08-15'
+
+Q1: Write a query that adds 7 days to this date.
+
+SELECT Date_add('2023-08-15' ,INTERVAL 7 DAY);
+
+Your Turn — Q2:
+
+Now write a query that subtracts 15 days from today’s date.
+
+SELECT DATE_SUB('2023-08-15', INTERVAL 15 DAY);
+
+Write a query that gets the number of days between:
+
+'2023-09-01' and '2023-08-15'
+
+SELECT DATEDIFF('2023-09-01', '2023-08-15');
+
+Quick Check for You — Q4:
+
+Write a query that gets the month number from this date:
+'2023-09-01'
+
+SELECT MONTH('2023-09-01');
+
+Write a query to extract the day of the week (1 = Sunday, 7 = Saturday) from this date:
+'2023-09-01'
+
+select week('2023-09-01');
+SELECT DAYOFWEEK('2023-09-01'); ✅
+
+Get the name of the weekday (like 'Friday') from '2023-09-01'.
+SELECT DAYNAME('2023-09-01');
+
+Can you write the SQL to return the name of the month from '2023-09-01'?
+SELECT MONTHNAME('2023-09-01');
+
+Can you write a query that returns the last day of the month for:
+'2023-09-01'
+
+SELECT lastday('2023-09-01');
+
+SELECT LAST_DAY('2023-09-01'); ✅
+
+-------------------------------------------------------------------------------
+
+Got it! I’ll give you a **mix of simple-to-intermediate date function questions** that a data analyst is likely to see in practice or interviews.
+
+---
+
+## Simple & Common Date Function Practice (Data Analyst style)
+
+### 1. Find all orders placed **this month** (assuming a table `orders` with `order_date`).
+
+select *,month(order_date) as mnt from orders ;
+
+✅ Fix:
+SELECT * FROM orders
+WHERE MONTH(order_date) = MONTH(CURDATE())
+  AND YEAR(order_date) = YEAR(CURDATE());
+  
+  -- You include YEAR(...) to ensure the query truly returns orders from this month of this year
+
+---
+
+### 2. Calculate the **number of days** between a customer's first and last order.
+
+select datediff('first',last);
+
+✅ Fix:
+SELECT customer_id,
+       DATEDIFF(MAX(order_date), MIN(order_date)) AS days_between
+FROM orders
+GROUP BY customer_id;
+
+
+---
+
+### 3. Get the **day name** (e.g., Monday, Tuesday) for each order.
+select dayname(order_date)  as dayname from orders
+
+---
+
+### 4. Group total sales by **week number** and show total sales per week.
+
+SELECT WEEK(order_date) AS week_num,
+       SUM(amount) AS total_sales
+FROM orders
+GROUP BY WEEK(order_date);
+
+NOTE:-
+
+❌ Can you group by an aggregate function?
+
+No, you cannot. SQL does not allow grouping by aggregate functions like SUM(), AVG(), COUNT(), etc.
+
+🧠 Why not?
+
+Because aggregate functions operate after grouping — they summarize the grouped data.
+---
+
+### 5. Find customers who haven’t ordered anything in the **last 30 days**.
+select orderId, order_date from orders where order_date=last_days(order_date); 
+
+✅ SELECT customer_id
+FROM orders
+GROUP BY customer_id
+HAVING MAX(order_date) < CURDATE() - INTERVAL 30 DAY;
+
+
+---
+
+### 6. Calculate the **average order amount per month** for the past 6 months.
+select avg(Order_amount),order_date from orders where order_date<= date_add(order_date interval 6 month) group by order_date;
+
+✅ SELECT 
+    YEAR(order_date) AS yr,
+    MONTH(order_date) AS mth,
+    AVG(order_amount) AS avg_order
+FROM orders
+WHERE order_date >= CURDATE() - INTERVAL 6 MONTH
+GROUP BY YEAR(order_date), MONTH(order_date);
+
+---
+
+### 7. For each order, show the **quarter** (1 to 4) it was placed in.
+
+SELECT order_id, order_date, QUARTER(order_date) AS quarter_num
+FROM orders;
+
+
+---
+
+### 8. Find the **last day of the month** for each order date.
+SELECT order_date, LAST_DAY(order_date) AS last_day
+FROM orders;
+
+
+---
+“Find customers who placed their first order in the last 7 days”
+
+select customer_id from orders group by customer_id  having min(orderdate)>= CURDATE() - INTERVAL 7 DAY;
+
+“Find customers whose first and last orders were in the same month”
+
+SELECT customer_id
+FROM orders
+GROUP BY customer_id
+HAVING 
+MONTH(MIN(orderdate)) = MONTH(MAX(orderdate))
+AND YEAR(MIN(orderdate)) = YEAR(MAX(orderdate));
+
+"Find customers whose last order was within 15 days after their first order."
+
+select customer_id from orders group by customer_id having
+HAVING MAX(order_date) >= CURDATE() - INTERVAL 15 DAY
+   AND MIN(order_date) >= CURDATE() - INTERVAL 15 DAY
+   
+ NOTE: Let me guide you — here's how to check if last order is within last 15 days:
+ HAVING MAX(order_date) >= CURDATE() - INTERVAL 15 DAY
+
+
+
+
+
+

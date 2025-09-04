@@ -1,0 +1,562 @@
+stored procedure pratice
+
+Perfect! Let's get you practicing stored procedures in MySQL. Here's your **first question**, including the **table structure** and **sample data**.
+
+---
+
+### 🔹 Question 1:
+
+**Create a stored procedure that returns the total sales amount for a given customer ID.**
+
+---
+
+### 📊 Table: `orders`
+
+| order\_id | customer\_id | order\_date | total\_amount |
+| --------- | ------------ | ----------- | ------------- |
+| 1         | 101          | 2023-01-10  | 150.00        |
+| 2         | 102          | 2023-01-15  | 200.00        |
+| 3         | 101          | 2023-02-10  | 100.00        |
+| 4         | 103          | 2023-02-18  | 250.00        |
+| 5         | 101          | 2023-03-05  | 175.00        |
+
+---
+
+⏳ Once you've written your stored procedure, paste it here and I'll check it carefully, line by line, and help you pinpoint any issues. Ready when you are.
+
+DELIMITER $$
+
+create procedure total_sales(In cust_id int)
+begin
+
+select sum(total_amount) AS total_sales  from orders where customer_id =cust_id;
+end $$
+DELIMITER ;
+
+CALL total_sales(101);
+
+--------------------------------------------------------------------------------------------------------------------
+
+Here's the **final corrected version** of your stored procedure with the minor improvement added:
+
+---
+
+### ✅ Final Answer:
+
+```sql
+DELIMITER $$
+
+CREATE PROCEDURE total_sales(IN cust_id INT)
+BEGIN
+    SELECT SUM(total_amount) AS total_sales 
+    FROM orders 
+    WHERE customer_id = cust_id;
+END $$
+
+DELIMITER ;
+```
+
+You can now call it like this:
+
+```sql
+CALL total_sales(101);
+```
+
+---
+
+## 📘 Next Question
+
+### 🔹 Question 2:
+
+**Create a stored procedure that inserts a new product into a `products` table, but only if the product name doesn’t already exist.**
+
+---
+
+### 📊 Table: `products`
+
+| product\_id | product\_name | price  |
+| ----------- | ------------- | ------ |
+| 1           | 'Keyboard'    | 30.00  |
+| 2           | 'Mouse'       | 20.00  |
+| 3           | 'Monitor'     | 120.00 |
+
+---
+
+🧩 **Your Task:**
+Write a stored procedure named `add_product_if_new` that:
+
+* Accepts `product_name` and `price` as input parameters.
+* Checks if a product with the same name already exists.
+* If it **doesn’t** exist, inserts the new product.
+* If it **does** exist, do nothing.
+
+---
+
+⚠️ **No need to handle messages or outputs — just make the logic work.**
+
+When you're ready, post your attempt here and I’ll review it!
+
+DELIMITER $$
+
+CREATE PROCEDURE add_product_if_new(IN in_product_name varchar(50),in in_price int)
+BEGIN
+    set var = SELECT product_name,price from products where product_name= in_product_name ;
+	select
+	Case when product_name in present then 'product name alrewady exists' else
+	 insert into products (product_name, price) values(in_product_name, in_price);
+END $$
+
+DELIMITER ;
+
+--  solution
+
+DELIMITER $$
+
+CREATE PROCEDURE add_product_if_new(IN in_product_name VARCHAR(50), IN in_price INT)
+BEGIN
+    -- Step 1: Declare a variable
+    DECLARE product_count INT;
+
+    -- Step 2: Get the number of matching product names
+    SELECT COUNT(*) INTO product_count
+    FROM products
+    WHERE product_name = in_product_name;
+
+    -- Step 3: Check if the product exists
+    IF product_count = 0 THEN
+        INSERT INTO products (product_name, price)
+        VALUES (in_product_name, in_price);
+    END IF;
+END $$
+
+DELIMITER ;
+
+✅ Quick Summary:
+🟩 CASE is used inside a SELECT
+🟥 IF...THEN...ELSE is used in stored procedures for control flow
+--------------------------------------------------------------------------
+
+Awesome — here comes your next stored procedure practice challenge.
+
+---
+
+## 🔹 Question 3:
+
+**Create a stored procedure that calculates and returns the average order amount for a given month and year.**
+
+---
+
+### 📊 Table: `orders`
+
+| order\_id | customer\_id | order\_date | total\_amount |
+| --------- | ------------ | ----------- | ------------- |
+| 1         | 101          | 2023-01-10  | 150.00        |
+| 2         | 102          | 2023-01-15  | 200.00        |
+| 3         | 101          | 2023-02-10  | 100.00        |
+| 4         | 103          | 2023-02-18  | 250.00        |
+| 5         | 101          | 2023-03-05  | 175.00        |
+| 6         | 104          | 2023-02-20  | 300.00        |
+
+---
+
+## 🧩 Your Task:
+
+Write a stored procedure named `monthly_avg_order` that:
+
+* Takes **two input parameters**: `in_month` and `in_year` (both integers).
+* Calculates the **average** `total_amount` of all orders placed in that month/year.
+* Returns the result.
+
+---
+
+⏳ When you're done, share your code and I’ll check it line by line with you — no spoilers unless you ask.
+
+DELIMITER $$
+ $$
+create procedure monthly_avg_order(in in_month int,in in_year int)
+begin
+	select avg(total_amount) as avg_amount from orders where MONTH(order_date) = in_month AND YEAR(order_date) = in_year;
+end $$
+DELIMITER ;
+
+CALL monthly_avg_order(2, 2023);
+---------------------------------------------------------
+
+Great — you're moving quickly and with solid understanding. Let's raise the complexity a bit for this one.
+
+---
+
+## 🔹 Question 4:
+
+**Create a stored procedure that increases the price of all products in a given category by a certain percentage.**
+
+---
+
+### 📊 Table: `products`
+
+| product\_id | product\_name | category      | price  |
+| ----------- | ------------- | ------------- | ------ |
+| 1           | 'Keyboard'    | 'Electronics' | 30.00  |
+| 2           | 'Mouse'       | 'Electronics' | 20.00  |
+| 3           | 'Desk Lamp'   | 'Home'        | 25.00  |
+| 4           | 'Monitor'     | 'Electronics' | 120.00 |
+| 5           | 'Notebook'    | 'Stationery'  | 5.00   |
+
+---
+
+## 🧩 Your Task:
+
+Write a stored procedure named `increase_price_by_category` that:
+
+* Accepts two **input parameters**:
+
+  * `in_category` (VARCHAR)
+  * `in_percent` (DECIMAL)
+* Increases the price of all products in that category by the given percentage.
+
+  * For example: if `in_percent = 10`, increase price by 10%.
+
+---
+
+🎯 You’re **modifying** rows here, so use an `UPDATE` statement.
+
+⏳ Give it a try and send your version — I’ll review it carefully and help you refine anything that's off.
+
+DELIMITER $$
+create procedure increase_price_by_category(in in_category VARCHAR(50),in in_percent DECIMAL)
+begin
+	update products SET price = price + (price * in_percent / 100)
+    where category=in_category;
+end $$
+DELIMITER ;
+
+CALL increase_price_by_category('Electronics', 10);
+-------------------------------------------------------------------------
+
+Excellent — it's the right time to get hands-on with `OUT` and `INOUT` parameters. Let’s do both, one by one.
+
+---
+
+## 🔹 Question 5: Using `OUT` parameter
+
+**Write a stored procedure that takes a customer ID as input and returns the number of orders placed by that customer using an `OUT` parameter.**
+
+---
+
+### 📊 Table: `orders`
+
+| order\_id | customer\_id | order\_date | total\_amount |
+| --------- | ------------ | ----------- | ------------- |
+| 1         | 101          | 2023-01-10  | 150.00        |
+| 2         | 102          | 2023-01-15  | 200.00        |
+| 3         | 101          | 2023-02-10  | 100.00        |
+| 4         | 103          | 2023-02-18  | 250.00        |
+| 5         | 101          | 2023-03-05  | 175.00        |
+
+---
+
+### 🧩 Your Task:
+
+Write a procedure named `get_order_count` that:
+
+* Takes `in_customer_id` as an **`IN`** parameter
+* Returns the **number of orders** using an **`OUT`** parameter
+
+---
+
+Once you try this one, we’ll move on to an **`INOUT`** challenge next.
+
+Let’s see your attempt!
+
+
+DELIMITER $$
+create procedure get_order_count(in in_customer_id int, out number_of_orders int)
+begin
+	
+	select count(*) into number_of_orders from orders where customer_id=in_customer_id;
+end $$
+DELIMITER ;
+
+call:--
+
+set @total_orders =0
+
+call get_order_count(101,@total_orders);
+
+-- View the result
+SELECT @total_orders;
+
+-------------------------------------------------
+
+Awesome — here comes your `INOUT` parameter challenge.
+
+---
+
+## 🔹 Question 6: Using `INOUT` parameter
+
+**Write a stored procedure that accepts a product ID and increases its price by a given percentage. The new price should be returned using an `INOUT` parameter.**
+
+---
+
+### 📊 Table: `products`
+
+| product\_id | product\_name | price  |
+| ----------- | ------------- | ------ |
+| 1           | 'Keyboard'    | 30.00  |
+| 2           | 'Mouse'       | 20.00  |
+| 3           | 'Monitor'     | 120.00 |
+
+---
+
+### 🧩 Your Task:
+
+Create a procedure called `adjust_product_price` that:
+
+* Accepts:
+
+  * `in_product_id` (**`IN`** parameter)
+  * `inout_price` (**`INOUT`** parameter)
+* Increases the product's price by `inout_price` **percent**
+* Updates the product in the table
+* Returns the **new price** via the same `inout_price` variable
+
+---
+
+⏳ Go ahead and write your attempt. I’ll review your use of `INOUT` and math logic closely.
+DELIMITER $$
+create procedure adjust_product_price(in in_product_id int, inout inout_price DECIMAL)
+begin
+	update products set price=price+(price*inout_price/100) into inout_price  where product_id=in_product_id;
+end $$
+DELIMITER ;
+
+sol:
+
+You're very close again — you're thinking in the right direction — but we have to fix two important things to make this work with `INOUT`.
+
+Let’s go step-by-step.
+
+---
+
+## ❌ Problems in Your Code:
+
+### 🔸 1. `UPDATE ... INTO` — ❌ Not allowed
+
+In MySQL:
+
+* `UPDATE` doesn't support `INTO` to return a value.
+* Only `SELECT ... INTO` works that way.
+
+You’re trying to **update** and **return** the new price at the same time, but that needs to be done in two **separate** steps.
+
+---
+
+### 🔸 2. Logic for `inout_price`
+
+Remember, `inout_price` is **the percent** coming in, but you also want to **store the final price** in it by the end.
+
+So you should:
+
+1. Read the original price.
+2. Calculate the new price.
+3. Update the table.
+4. Update the `inout_price` variable to hold the **new price**.
+
+---
+
+## ✅ Here’s What to Do Instead (Guidance Only, Not Full Code):
+
+Inside your procedure:
+
+```sql
+-- Declare a temporary variable to hold the new price
+DECLARE new_price DECIMAL(10,2);
+
+-- Step 1: Get current price and calculate the new one
+SELECT price + (price * inout_price / 100)
+INTO new_price
+FROM products
+WHERE product_id = in_product_id;
+
+-- Step 2: Update the product price
+UPDATE products
+SET price = new_price
+WHERE product_id = in_product_id;
+
+-- Step 3: Set the INOUT parameter to the new price
+SET inout_price = new_price;
+```
+
+---
+
+DELIMITER $$
+
+CREATE PROCEDURE adjust_product_price(
+    IN in_product_id INT,
+    INOUT inout_price DECIMAL(10,2)
+)
+BEGIN
+    DECLARE new_price DECIMAL(10,2);
+
+    -- Step 1: Calculate the new price
+    SELECT price + (price * inout_price / 100)
+    INTO new_price
+    FROM products
+    WHERE product_id = in_product_id;
+
+    -- Step 2: Update the product's price
+    UPDATE products
+    SET price = new_price
+    WHERE product_id = in_product_id;
+
+    -- Step 3: Return the new price via the INOUT parameter
+    SET inout_price = new_price;
+END $$
+
+DELIMITER ;
+
+-- Step 1: Set a session variable to use as INOUT
+SET @p = 10;  -- This means "increase by 10%"
+
+-- Step 2: Call the procedure for product_id = 1
+CALL adjust_product_price(1, @p);
+
+-- Step 3: See the new price that was set
+SELECT @p;  -- Will now show the new price of product_id 1
+
+
+
+========================================================================================
+
+Great! Let’s level up with a procedure that uses **all three**: `IN`, `OUT`, and `INOUT`.
+
+---
+
+## 🔹 Challenge Question:
+
+**Create a stored procedure that:**
+
+* Takes as input (`IN`):
+
+  * A product ID (`in_product_id`)
+  * A percentage increase (`in_percent`)
+* Uses an `INOUT` parameter:
+
+  * The current price of the product (`inout_price`)
+* Returns an `OUT` parameter:
+
+  * A message (`out_message`) indicating success or failure
+
+---
+
+### What the procedure should do:
+
+1. Check if the product exists.
+2. If it exists:
+
+   * Calculate the new price by increasing the current price by `in_percent`.
+   * Update the product’s price.
+   * Update `inout_price` to the new price.
+   * Set `out_message` to `'Price updated successfully'`.
+3. If the product doesn’t exist:
+
+   * Set `out_message` to `'Product not found'`.
+
+---
+
+### Tables
+
+Use the same `products` table as before:
+
+| product\_id | product\_name | price  |
+| ----------- | ------------- | ------ |
+| 1           | 'Keyboard'    | 30.00  |
+| 2           | 'Mouse'       | 20.00  |
+| 3           | 'Monitor'     | 120.00 |
+
+---
+
+Give it a try! Write the procedure, and I’ll help you review it step by step.
+
+DELIMITER $$
+
+CREATE PROCEDURE prd(IN in_product_id INT, IN in_percent DECIMAL, INOUT inout_price INT, OUT out_message VARCHAR(50))
+BEGIN
+
+DECLARE PROD_EXISTS INT DEFAULT 0;
+DECLARE new_price decimal(10,2);
+
+-- Check if the product exists.
+select count(*) into PROD_EXISTS from products  WHERE product_id = in_product_id;
+
+if PROD_EXISTS >0 then 
+ select price+(price*in_percent/100) into new_price from products;
+ and set out_message='Price updated successfully'
+ else
+ set out_message ='Product not found'
+
+ 
+ update products
+ set price=new_price
+ WHERE product_id=in_product_id;
+ 
+
+set  inout_price=new_price;
+
+end if;
+END $$
+DELIMITER ;
+
+sol:-
+
+DELIMITER $$
+
+CREATE PROCEDURE prd(
+    IN in_product_id INT,
+    IN in_percent DECIMAL(5,2),
+    INOUT inout_price DECIMAL(10,2),
+    OUT out_message VARCHAR(50)
+)
+BEGIN
+    DECLARE product_exists INT DEFAULT 0;
+    DECLARE new_price DECIMAL(10,2);
+
+    -- Step 1: Check if the product exists
+    SELECT COUNT(*) INTO product_exists
+    FROM products
+    WHERE product_id = in_product_id;
+
+    IF product_exists > 0 THEN
+        -- Step 2: Calculate new price
+        SELECT price + (price * in_percent / 100)
+        INTO new_price
+        FROM products
+        WHERE product_id = in_product_id;
+
+        -- Step 3: Update product
+        UPDATE products
+        SET price = new_price
+        WHERE product_id = in_product_id;
+
+        -- Step 4: Return values
+        SET inout_price = new_price;
+        SET out_message = 'Price updated successfully';
+    ELSE
+        -- Product not found
+        SET out_message = 'Product not found';
+    END IF;
+
+END $$
+
+DELIMITER ;
+
+--
+-- Declare session variables
+SET @price = 0;
+SET @msg = '';
+
+-- Call the procedure
+CALL prd(2, 10, @price, @msg);
+
+-- Check output
+SELECT @price AS new_price, @msg AS result_message;
